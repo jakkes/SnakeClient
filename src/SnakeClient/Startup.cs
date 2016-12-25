@@ -48,6 +48,7 @@ namespace SnakeClient
             }
 
             app.UseStaticFiles();
+            app.UseForwardedHeaders();
 
             app.UseMvc(routes =>
             {
