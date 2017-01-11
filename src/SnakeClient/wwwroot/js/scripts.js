@@ -20,6 +20,7 @@ context.clear = function () {
 
 ws.onmessage = function (e) {
     var o = JSON.parse(e.data);
+    console.log(o);
     switch (o.Action) {
         case "GameData":
             _handleGameData(o);
@@ -51,7 +52,6 @@ function _handleSettings(settings) {
 }
 
 function _handleGameData(data) {
-    console.log(data);
     context.clear();
     for (var i = 0; i < data.Snakes.length; i++) {
         context.beginPath();
