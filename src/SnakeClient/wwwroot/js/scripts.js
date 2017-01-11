@@ -37,6 +37,15 @@ ws.onmessage = function (e) {
     }
 };
 
+function _moveSnake(snake){
+    var head = snake.Nodes[0];
+    snake.Nodes.splice(0,0,{
+    X: head.X + Math.cos(snake.Heading) * ScaleFactor,
+    Y: head.Y + Math.sin(snake.Heading) * ScaleFactor
+    });
+    snake.Nodes.splice(snake.Length);
+}
+
 function _sendConnectRequest() {
     ws.send(JSON.stringify({ "Action": "Connect" }));
 }
