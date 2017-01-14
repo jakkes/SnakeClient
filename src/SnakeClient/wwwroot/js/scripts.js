@@ -80,8 +80,8 @@ function _draw(){
 function _moveSnake(snake){
     var head = snake.Nodes[0];
     snake.Nodes.splice(0,0,{
-        X: head.X + Math.cos(snake.Heading) * ScaleFactor,
-        Y: head.Y + Math.sin(snake.Heading) * ScaleFactor
+        X: head.X + Math.cos(snake.Heading) * Settings.SnakeMovementLength * ScaleFactor,
+        Y: head.Y + Math.sin(snake.Heading) * ScaleFactor* Settings.SnakeMovementLength
     });
     snake.Nodes.splice(snake.Length);
 }
