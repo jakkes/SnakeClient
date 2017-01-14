@@ -1,5 +1,5 @@
 ﻿
-var SERVER_ADDRESS = "ws://192.168.2.150:8080";
+var SERVER_ADDRESS = "ws://snk.jakke.se:8080";
 
 var canvas = document.getElementById("canvas");
 var context = canvas.getContext("2d");
@@ -10,6 +10,12 @@ var ws = new WebSocket(SERVER_ADDRESS);
 var ID;
 var Settings;
 var ScaleFactor;
+var Snakes;
+var Apples;
+var _newSnakes = null;
+
+var _moveTimer;
+var _drawTimer;
 
 // Left = -1, None = 0, Right = 1
 var Turn = 0;
@@ -28,6 +34,9 @@ ws.onmessage = function (e) {
         case "Died":
             _handleSnakeDied();
             break;
+        case "GameStart":
+            _handleGameStart();
+            break;
         case "ID":
             _handleId(o.Id);
             break;
@@ -37,13 +46,54 @@ ws.onmessage = function (e) {
     }
 };
 
+function _handleGameStart(){
+    _drawTimer = setInterval(_draw,1000 / 60);
+    _moveTimer = setInterval(_moveSnakes, 1000 / Settings.SnakeMovementRate);
+}
+
+function _draw(){
+    context.clear();
+    for (var i = 0; i < Snakes.length; i++) {
+        context.beginPath();
+        for (var j = 0; j < Snakes[i].Nodes.length - 1; j++) {
+            context.moveTo(
+                Snakes[i].Nodes[j].X * ScaleFactor,
+                Snakes[i].Nodes[j].Y * ScaleFactor
+                );
+            context.lineTo(
+                Snakes[i].Nodes[j + 1].X * ScaleFactor,
+                Snakes[i].Nodes[j + 1].Y * ScaleFactor
+                );
+        }
+        context.lineWidth = Settings.SnakeRadius * 2 * ScaleFactor;
+        context.stroke();
+    }
+
+    for (i = 0; i < Apples.length; i++) {
+        context.beginPath();
+        context.arc(data.Apples[i].X, data.Apples[i].Y, Settings.AppleRadius * ScaleFactor, 0, 2 * Math.PI);
+        context.fillStyle = 'red';
+        context.fill();
+    }
+}
+
 function _moveSnake(snake){
     var head = snake.Nodes[0];
     snake.Nodes.splice(0,0,{
-    X: head.X + Math.cos(snake.Heading) * ScaleFactor,
-    Y: head.Y + Math.sin(snake.Heading) * ScaleFactor
+        X: head.X + Math.cos(snake.Heading) * ScaleFactor,
+        Y: head.Y + Math.sin(snake.Heading) * ScaleFactor
     });
     snake.Nodes.splice(snake.Length);
+}
+
+function _moveSnakes(){
+    if(_newSnakes !== null){
+        Snakes = _newSnakes;
+        _newSnakes = null;
+    }
+    for(var i = 0; i < Snakes.length; i++){
+        _moveSnake(Snakes[i]);
+    }
 }
 
 function _sendConnectRequest() {
@@ -61,29 +111,8 @@ function _handleSettings(settings) {
 }
 
 function _handleGameData(data) {
-    context.clear();
-    for (var i = 0; i < data.Snakes.length; i++) {
-        context.beginPath();
-        for (var j = 0; j < data.Snakes[i].Nodes.length - 1; j++) {
-            context.moveTo(
-                data.Snakes[i].Nodes[j].X * ScaleFactor,
-                data.Snakes[i].Nodes[j].Y * ScaleFactor
-                );
-            context.lineTo(
-                data.Snakes[i].Nodes[j + 1].X * ScaleFactor,
-                data.Snakes[i].Nodes[j + 1].Y * ScaleFactor
-                );
-        }
-        context.lineWidth = Settings.SnakeRadius * 2 * ScaleFactor;
-        context.stroke();
-    }
-
-    for (i = 0; i < data.Apples.length; i++) {
-        context.beginPath();
-        context.arc(data.Apples[i].X, data.Apples[i].Y, Settings.AppleRadius * ScaleFactor, 0, 2 * Math.PI);
-        context.fillStyle = 'red';
-        context.fill();
-    }
+    _newSnakes = data.Snakes;
+    Apples = data.Apples;
 }
 
 function _handleId(id) {
@@ -150,6 +179,8 @@ function _handleKeyUp(keyCode) {
 
 function _handleSnakeDied() {
     context.clear();
+    clearInterval(_moveTimer);
+    clearInterval(_drawTimer);
     _sendConnectRequest();
 }
 
