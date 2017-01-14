@@ -71,7 +71,7 @@ function _draw(){
 
     for (i = 0; i < Apples.length; i++) {
         context.beginPath();
-        context.arc(data.Apples[i].X, data.Apples[i].Y, Settings.AppleRadius * ScaleFactor, 0, 2 * Math.PI);
+        context.arc(Apples[i].X, Apples[i].Y, Settings.AppleRadius * ScaleFactor, 0, 2 * Math.PI);
         context.fillStyle = 'red';
         context.fill();
     }
