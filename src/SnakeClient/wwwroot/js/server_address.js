@@ -1,0 +1,1 @@
+var SERVER_ADDRESS = "ws://snk.jakke.se:8080";

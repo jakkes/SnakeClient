@@ -1,6 +1,4 @@
 ﻿
-var SERVER_ADDRESS = "ws://snk.jakke.se:8080";
-
 var canvas = document.getElementById("canvas");
 var context = canvas.getContext("2d");
 
