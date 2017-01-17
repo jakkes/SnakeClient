@@ -8,12 +8,11 @@ var ws = new WebSocket(SERVER_ADDRESS);
 var ID;
 var Settings;
 var ScaleFactor;
-var Snakes;
-var Apples;
+var Snakes = [];
+var Apples = {};
 var _newSnakes = null;
 
 var _moveTimer;
-var _drawTimer;
 
 // Left = -1, None = 0, Right = 1
 var Turn = 0;
@@ -29,8 +28,17 @@ ws.onmessage = function (e) {
         case "GameData":
             _handleGameData(o);
             break;
+        case "AppleSpawned":
+            _handleAppleSpawn(o);
+            break;
+        case "AppleDespawned":
+            _handleAppleDespawned(o);
+            break;
+        case "SnakeDied":
+            _handleSnakeDied(o);
+            break;
         case "Died":
-            _handleSnakeDied();
+            _handleDied();
             break;
         case "GameStart":
             _handleGameStart();
@@ -44,13 +52,32 @@ ws.onmessage = function (e) {
     }
 };
 
+function _handleSnakeDied(o) {
+    if (o.ID === ID) return;
+    for (var i = 0; i < Snakes.length; i++) {
+        if (Snakes[i].ID === o.ID) {
+            Snakes[i].Nodes = [];
+            break;
+        }
+    }
+}
+
+function _handleAppleDespawned(o) {
+    delete Apples[o.ID];
+}
+
+function _handleAppleSpawn(o) {
+    Apples[o.Apple.ID] = o.Apple;
+}
+
 function _handleGameStart(){
-    _drawTimer = setInterval(_draw,1000 / 60);
     _moveTimer = setInterval(_moveSnakes, 1000 / Settings.SnakeMovementRate);
 }
 
 function _draw(){
     context.clear();
+
+    // Draw snakes
     for (var i = 0; i < Snakes.length; i++) {
         context.beginPath();
         for (var j = 0; j < Snakes[i].Nodes.length - 1; j++) {
@@ -67,19 +94,24 @@ function _draw(){
         context.stroke();
     }
 
-    for (i = 0; i < Apples.length; i++) {
+    // Draw apples
+    for (var key in Apples) {
         context.beginPath();
-        context.arc(Apples[i].X, Apples[i].Y, Settings.AppleRadius * ScaleFactor, 0, 2 * Math.PI);
+        context.arc(Apples[key].X * ScaleFactor, Apples[key].Y * ScaleFactor, Settings.AppleRadius * ScaleFactor, 0, 2 * Math.PI);
         context.fillStyle = 'red';
         context.fill();
     }
 }
 
-function _moveSnake(snake){
+function _moveSnake(snake) {
+
+    // Is there a snake..?
+    if (snake.Nodes.length === 0) return;
+
     var head = snake.Nodes[0];
     snake.Nodes.splice(0,0,{
-        X: head.X + Math.cos(snake.Heading) * Settings.SnakeMovementLength * ScaleFactor,
-        Y: head.Y + Math.sin(snake.Heading) * ScaleFactor* Settings.SnakeMovementLength
+        X: head.X + Math.cos(snake.Heading) * Settings.SnakeMovementLength,
+        Y: head.Y + Math.sin(snake.Heading) * Settings.SnakeMovementLength
     });
     snake.Nodes.splice(snake.Length);
 }
@@ -89,8 +121,11 @@ function _moveSnakes(){
         Snakes = _newSnakes;
         _newSnakes = null;
     }
-    for(var i = 0; i < Snakes.length; i++){
-        _moveSnake(Snakes[i]);
+    if (Snakes !== null) {
+        for (var i = 0; i < Snakes.length; i++) {
+            _moveSnake(Snakes[i]);
+        }
+        _draw();
     }
 }
 
@@ -110,7 +145,6 @@ function _handleSettings(settings) {
 
 function _handleGameData(data) {
     _newSnakes = data.Snakes;
-    Apples = data.Apples;
 }
 
 function _handleId(id) {
@@ -175,10 +209,11 @@ function _handleKeyUp(keyCode) {
     }
 }
 
-function _handleSnakeDied() {
+function _handleDied() {
     context.clear();
     clearInterval(_moveTimer);
-    clearInterval(_drawTimer);
+    Apples = {};
+    Snakes = [];
     _sendConnectRequest();
 }
 

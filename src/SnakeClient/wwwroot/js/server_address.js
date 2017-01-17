@@ -1,1 +1,1 @@
-var SERVER_ADDRESS = "ws://snk.jakke.se:8080";
+var SERVER_ADDRESS = "ws://127.0.0.1:8080";
