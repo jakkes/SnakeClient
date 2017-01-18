@@ -38,6 +38,7 @@ ws.onmessage = function (e) {
             _handleSnakeDied(o);
             break;
         case "Died":
+            console.log("Omg snake died!!!");
             _handleDied();
             break;
         case "GameStart":
@@ -53,11 +54,15 @@ ws.onmessage = function (e) {
 };
 
 function _handleSnakeDied(o) {
-    if (o.ID === ID) return;
-    for (var i = 0; i < Snakes.length; i++) {
-        if (Snakes[i].ID === o.ID) {
-            Snakes[i].Nodes = [];
-            break;
+    if (o.ID === ID) {
+        return;
+        //_handleDied();
+    } else {
+        for (var i = 0; i < Snakes.length; i++) {
+            if (Snakes[i].ID === o.ID) {
+                Snakes[i].Nodes = [];
+                break;
+            }
         }
     }
 }
@@ -131,6 +136,7 @@ function _moveSnakes(){
 
 function _sendConnectRequest() {
     ws.send(JSON.stringify({ "Action": "Connect" }));
+    console.log("I wanna live!!");
 }
 
 function _sendSettingsRequest() {
@@ -210,10 +216,12 @@ function _handleKeyUp(keyCode) {
 }
 
 function _handleDied() {
+    console.log("And it sucks :(");
     context.clear();
     clearInterval(_moveTimer);
     Apples = {};
     Snakes = [];
+    console.log("I dont wanna be dead anymore!!!");
     _sendConnectRequest();
 }
 
